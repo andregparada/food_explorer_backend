@@ -80,10 +80,8 @@ class DishesController {
             .whereLike("name", `%${name}%`)
             .orderBy("name");
         }
-        console.log(dishes)
 
         const dishIngredientsIds = await knex("ingredients").where({ dish_id });
-        console.log(dishIngredientsIds)
         const dishesWithIngredients = dishes.map(dish => {
             const dishIngredients = dishIngredientsIds.filter(ingredient => ingredient.dish_id === dish.id);
 
@@ -92,7 +90,6 @@ class DishesController {
                 ingredients: dishIngredients
             }
         });
-        console.log(dishesWithIngredients)
 
         return response.json(dishesWithIngredients);
     }
