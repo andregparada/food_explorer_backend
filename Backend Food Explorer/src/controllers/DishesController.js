@@ -1,20 +1,28 @@
 const knex = require("../database/knex");
 
+const DiskStorage = require("../providers/DiskStorage");
+
 class DishesController {
     async create(request, response) {
+        // let data = request.body.dados;
+        // data = JSON.parse(data)
+
+        // console.log(data, typeof(data))
         const { name, description, categorie, price, ingredients } = request.body;
         const user_id = request.user.id;
+        // const imageFilename = request.file.filename;
+
+        // const diskStorage = new DiskStorage();
+
+        // const filename = await diskStorage.saveFile(imageFilename);
 
         const [dish_id] = await knex("dishes").insert({
             name,
             description,
+            categorie,
             price,
-            user_id
-        });
-
-        await knex("categories").insert({
-            name: categorie,
-            dish_id,
+            user_id,
+            // image: filename
         });
 
         const ingredientsInsert = ingredients.map(name => {
@@ -34,12 +42,10 @@ class DishesController {
 
         const dish = await knex("dishes").where({ id }).first();
         const ingredients = await knex("ingredients").where({ dish_id: id }).orderBy("name");
-        const categorie = await knex("categories").where({ dish_id: id });
 
         return response.json({
             ...dish,
-            ingredients,
-            categorie
+            ingredients
         })
     }
 
@@ -54,10 +60,10 @@ class DishesController {
     async index(request, response) {
         const { name, ingredients } = request.query;
         const dish = await knex("dishes")
-        .whereLike("name", `%${name}%`)
-        .select("id")
-        .first();
-        
+            .whereLike("name", `%${name}%`)
+            .select("id")
+            .first();
+                    
         const dish_id = dish.id
 
         let dishes;
@@ -95,4 +101,4 @@ class DishesController {
     }
 }
 
-module.exports = DishesController
+module.exports = DishesController;
