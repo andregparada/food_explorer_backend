@@ -4,17 +4,17 @@ const DiskStorage = require("../providers/DiskStorage");
 
 class DishesController {
     async create(request, response) {
-        // let data = request.body.dados;
-        // data = JSON.parse(data)
-
-        // console.log(data, typeof(data))
         const { name, description, categorie, price, ingredients } = request.body;
         const user_id = request.user.id;
-        // const imageFilename = request.file.filename;
 
-        // const diskStorage = new DiskStorage();
+        const imageFilename = request.file.filename;
 
-        // const filename = await diskStorage.saveFile(imageFilename);
+        const diskStorage = new DiskStorage();
+
+        const ingredientsArray = ingredients.split(',');
+
+        const filename = await diskStorage.saveFile(imageFilename);
+
 
         const [dish_id] = await knex("dishes").insert({
             name,
@@ -22,10 +22,10 @@ class DishesController {
             categorie,
             price,
             user_id,
-            // image: filename
+            image: filename
         });
 
-        const ingredientsInsert = ingredients.map(name => {
+        const ingredientsInsert = ingredientsArray.map(name => {
             return {
                 dish_id,
                 name
@@ -76,20 +76,12 @@ class DishesController {
 
         const allDishes = await knex("dishes");
         if (ingredients.length !== 0) {
-            const filterIngredients = ingredients.map(ingredient => {
+            const addIngredientsDishes = ingredients.map(ingredient => {
                 const ingredientDishes = allDishes.filter(dish => dish.id === ingredient.dish_id);
-                console.log(ingredientDishes)
-                return {
-                    ...ingredientDishes
-                }
-            });
-
-            dishes = {
-                ...dishes,
-                ...filterIngredients
-            }
-            return response.json(dishes)
-
+                ingredientDishes.forEach(element => {
+                    dishes.push(element)
+                });
+            })
         }
 
         const allIngredients = await knex("ingredients");
@@ -102,10 +94,40 @@ class DishesController {
             }
         });
 
-        return response.json(dishesWithIngredients);
+        const dishesFiltered =[];
+        for (const dish of dishesWithIngredients) {
+            const isDuplicate = dishesFiltered.find((duplicateDish) => duplicateDish.name === dish.name)
+            if (!isDuplicate) {
+                dishesFiltered.push(dish)
+            }
+        }
+
+        return response.json(dishesFiltered);
     }
 
-        // const { name, ingredients } = request.query;
+
+
+}
+
+module.exports = DishesController;
+
+
+            // código para filtrar ingredientes alterado
+            // const filterIngredients = ingredients.map(ingredient => {
+            //     const ingredientDishes = allDishes.filter(dish => dish.id === ingredient.dish_id);
+            //     return {
+            //         ...ingredientDishes
+            //     }
+            // });
+
+            // dishes = {
+            //     ...dishes,
+            //     ...filterIngredients
+            // }
+            // return response.json(dishes)
+
+            // antigo index
+                    // const { name, ingredients } = request.query;
         // const dish = await knex("dishes")
         //     .whereLike("name", `%${name}%`)
         //     .select("id")
@@ -135,7 +157,3 @@ class DishesController {
         // }
 
         // const dishIngredientsIds = await knex("ingredients").where({ dish_id });
-
-}
-
-module.exports = DishesController;
