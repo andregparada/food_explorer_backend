@@ -37,6 +37,49 @@ class DishesController {
         return response.json();
     }
 
+    async update(request, response) {
+        const { name, description, categorie, price, ingredients } = request.body;
+        const { id } = request.params;
+        const imageFilename = request.file.filename;
+
+        const diskStorage = new DiskStorage();
+
+        const dish = await knex("dishes").where({ id }).first();
+
+        if(imageFilename) {
+            if (dish.image) {
+                await diskStorage.deleteFile(dish.image)
+            }
+        }
+
+        const filename = await diskStorage.saveFile(imageFilename);
+
+        if (ingredients) {
+            const ingredientsArray = ingredients.split(',');
+            await knex("ingredients").where({ dish_id: id }).delete()
+
+            const ingredientsInsert = ingredientsArray.map(ingredient => {
+                return {
+                    dish_id: id,
+                    name: ingredient
+                }
+            })
+
+            await knex("ingredients").insert(ingredientsInsert);
+        }
+
+        dish.name = name ?? dish.name;
+        dish.image = filename ?? dish.image;
+        dish.description = description ?? dish.description;
+        dish.categorie = categorie ?? dish.categorie;
+        dish.price = price ?? dish.price;
+
+        const updatedDish = await knex("dishes").where({ id }).first().update(dish)
+
+        return response.json()
+
+    }
+
     async show(request, response) {
         const { id } = request.params;
 
