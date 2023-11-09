@@ -40,19 +40,24 @@ class DishesController {
     async update(request, response) {
         const { name, description, categorie, price, ingredients } = request.body;
         const { id } = request.params;
-        const imageFilename = request.file.filename;
 
+        let imageFilename
+        if (request.file) {
+            imageFilename = request.file.filename;
+        }
+        
         const diskStorage = new DiskStorage();
 
         const dish = await knex("dishes").where({ id }).first();
 
+        let filename
         if(imageFilename) {
             if (dish.image) {
                 await diskStorage.deleteFile(dish.image)
+                filename = await diskStorage.saveFile(imageFilename);
             }
         }
 
-        const filename = await diskStorage.saveFile(imageFilename);
 
         if (ingredients) {
             const ingredientsArray = ingredients.split(',');
@@ -68,11 +73,19 @@ class DishesController {
             await knex("ingredients").insert(ingredientsInsert);
         }
 
-        dish.name = name ?? dish.name;
         dish.image = filename ?? dish.image;
-        dish.description = description ?? dish.description;
-        dish.categorie = categorie ?? dish.categorie;
-        dish.price = price ?? dish.price;
+        if(name !== "") {
+            dish.name = name
+        }
+        if(description !== "") {
+            dish.description = description
+        }
+        if(categorie !== "") {
+            dish.categorie = categorie
+        }
+        if(price !== "") {
+            dish.price = price
+        }
 
         const updatedDish = await knex("dishes").where({ id }).first().update(dish)
 
