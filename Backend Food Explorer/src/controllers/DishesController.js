@@ -15,7 +15,6 @@ class DishesController {
 
         const filename = await diskStorage.saveFile(imageFilename);
 
-
         const [dish_id] = await knex("dishes").insert({
             name,
             description,
@@ -160,9 +159,6 @@ class DishesController {
 
         return response.json(dishesFiltered);
     }
-
-
-
 }
 
 module.exports = DishesController;
